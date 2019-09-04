@@ -5,11 +5,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Memory Game</title>
+    <title>BlackJack</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
 
+<body>
+    <div class="wrap">
+
+        <h1>Black Jack</h1>
+
+        <section class="table">
+            <div class="croupierCards"></div>
+            <div class="playerCards"></div>
+        </section>
+
+        <section class="play">
+            <input type="number" placeholder="Value" id="bid">
+            <button id="start">Play</button>
+        </section>
+
+        <section class="panel">Your budget:<span class="wallet"></span></section>
+
+        <section class="score">
+            <span class="result"></span> You have played <span class="number"></span> games, which <span
+                class="win"></span>
+            are won
+            and <span class="loss"></span> are lost.
+        </section>
+
+    </div>
+
+    <script src="main.js"></script>
 </body>
+
 
 </html>
