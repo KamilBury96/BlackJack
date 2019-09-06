@@ -105,10 +105,24 @@ class Hand {
         }
         return croupierCards
     }
+    checkHandValue(hand) {
+        this.valueHand = 0;
+        hand.forEach(card => {
+            if (typeof card.value === "number") {
+                this.valueHand += card.value
+            }
+            if (typeof card.value === "string" && card.value === "A") {
+                this.valueHand += 11
+            } else if (typeof card.value === "string") this.valueHand += 10;
+
+
+        })
+        return this.valueHand
+
+    }
 }
 class Game {
     constructor(start) {
-        this.deck = new Deck();
         this.stats = new Statistics();
         this.budget = new Budget(start);
         this.croupierCards = [...document.querySelectorAll('div.croupierCards img')];
@@ -120,7 +134,29 @@ class Game {
         this.spanGames = document.querySelector('.score span.number');
         this.spanWins = document.querySelector('.score span.win');
         this.spanLosses = document.querySelector('.score span.loss');
+        this.divCroupierCards = document.querySelector('.croupierCards');
+        this.divPlayerCards = document.querySelector('.playerCards');
         this.render()
+    }
+
+    renderCroupierHandTable(hand) {
+
+        hand.forEach(card => {
+            let croupierCard = document.createElement('img');
+            croupierCard.setAttribute("src", `images/${card.cardName}.png`)
+            game.divCroupierCards.appendChild(croupierCard)
+        })
+
+
+    }
+    renderPlayerHandTable(hand) {
+        hand.forEach(card => {
+            let playerCard = document.createElement('img');
+            playerCard.setAttribute("src", `images/${card.cardName}.png`)
+            game.divPlayerCards.appendChild(playerCard)
+        })
+
+
     }
     render(money = this.budget.getBudgetAmount(), stats = [0, 0, 0], result = "") {
         this.spanBudget.textContent = money;
@@ -135,13 +171,15 @@ class Game {
         if (!this.budget.checkCanPlay(bid)) {
             return alert("You dont have enough money")
         }
+        this.deck = new Deck();
         this.budget.changeBudgetAmount(bid, '-');
         this.deck.shuffle();
         this.hand = new Hand();
-        let playerHand = game.hand.getPlayersCards();
+        let playerHand = this.hand.getPlayersCards();
         console.log(playerHand)
-        let croupierHand = game.hand.getCroupierCards();
-        console.log(croupierHand)
+        let croupierHand = this.hand.getCroupierCards();
+        this.renderCroupierHandTable(croupierHand);
+        this.renderPlayerHandTable(playerHand);
     }
 }
 
