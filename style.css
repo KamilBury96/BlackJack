@@ -82,11 +82,13 @@ h1 {
 .croupierCards {
     margin: 40px 40px 20px 40px;
     display: flex;
+    justify-content: center;
 }
 
 .playerCards {
     margin: 0px 40px 40px 40px;
     display: flex;
+    justify-content: center;
 }
 
 img {
