@@ -12,9 +12,11 @@ class Budget {
         this.changeBudgetAmount = (value, type = "+") => {
             if (typeof value === "number" && !isNaN(value)) {
                 if (type === "+") {
-                    return _money += value;
+                    return _money += 2 * value;
                 } else if (type === "-") {
                     return _money -= value;
+                } else if (type === "=") {
+                    return _money += value;
                 } else {
                     throw new Error("Invalid type of operation")
                 }
@@ -89,6 +91,20 @@ class Hand {
         this.getPlayersCards = () => _playerHand;
         this.getCroupierCards = () => _croupierHand;
     }
+    croupierGetRestCards() {
+        {
+            const card = game.deck.dealCard();
+            game.croupierHand.push(card)
+        }
+        return game.croupierHand
+    }
+    playersCardHit() {
+        {
+            const card = game.deck.dealCard();
+            game.playerHand.push(card)
+        }
+        return game.playerHand
+    }
     playersCardDeal() {
         let playerCards = [];
         for (let i = 0; i < 2; i++) {
@@ -106,6 +122,7 @@ class Hand {
         return croupierCards
     }
     checkHandValue(hand) {
+        this.aceValueReduce = 0;
         this.valueHand = 0;
         hand.forEach(card => {
             if (typeof card.value === "number") {
@@ -114,20 +131,83 @@ class Hand {
             if (typeof card.value === "string" && card.value === "A") {
                 this.valueHand += 11
             } else if (typeof card.value === "string") this.valueHand += 10;
-
-
+            if (this.valueHand > 21 && hand.filter(card => card.value === "A").length > this.aceValueReduce) {
+                this.valueHand -= 10
+                this.aceValueReduce++
+            }
         })
         return this.valueHand
 
     }
 }
+class Result {
+    constructor() {}
+    checkWinHit(value) {
+        console.log(value)
+        if (value > 21) {
+            game.btnHit.disabled = true;
+            game.btnStay.disabled = true;
+            game.btnPlay.removeAttribute('disabled');
+            game.stats.addDealToStatistics(false);
+            game.render(game.budget.getBudgetAmount(), game.stats.showGameStatistics())
+            game.playerHandValue.textContent = `Sorry! You went over 21!`;
+
+        }
+
+    }
+    checkWinStay(valueCroupier, valuePlayer) {
+        if (valueCroupier > 21) {
+            game.btnHit.disabled = true;
+            game.btnStay.disabled = true;
+            game.btnPlay.removeAttribute('disabled');
+            game.stats.addDealToStatistics(true);
+            game.budget.changeBudgetAmount(game.bid, "+")
+            game.render(game.budget.getBudgetAmount(), game.stats.showGameStatistics())
+            game.playerHandValue.textContent = `Nice! Dealer has over 21!, You won!`;
+            return
+        }
+        if (valueCroupier > valuePlayer) {
+            game.btnHit.disabled = true;
+            game.btnStay.disabled = true;
+            game.btnPlay.removeAttribute('disabled');
+            game.stats.addDealToStatistics(false);
+            game.render(game.budget.getBudgetAmount(), game.stats.showGameStatistics())
+            game.playerHandValue.textContent = `Sorry! Dealer has more`;
+            return
+        }
+        if (valueCroupier < valuePlayer) {
+            game.btnHit.disabled = true;
+            game.btnStay.disabled = true;
+            game.btnPlay.removeAttribute('disabled');
+            game.stats.addDealToStatistics(true);
+            game.budget.changeBudgetAmount(game.bid, "+")
+            game.render(game.budget.getBudgetAmount(), game.stats.showGameStatistics())
+            game.playerHandValue.textContent = `Nice! You won!`;
+            return
+        }
+        if (valueCroupier == valuePlayer) {
+            game.btnHit.disabled = true;
+            game.btnStay.disabled = true;
+            game.btnPlay.removeAttribute('disabled');
+            game.budget.changeBudgetAmount(game.bid, "=")
+            game.render(game.budget.getBudgetAmount(), game.stats.showGameStatistics())
+            game.playerHandValue.textContent = `It's draw`;
+            return
+        }
+
+    }
+}
 class Game {
     constructor(start) {
+        this.result = new Result()
         this.stats = new Statistics();
         this.budget = new Budget(start);
         this.croupierCards = [...document.querySelectorAll('div.croupierCards img')];
         this.playerCards = [...document.querySelectorAll('div.playerCards img')];
-        document.getElementById('start').addEventListener('click', this.startGame.bind(this));
+        this.btnPlay = document.getElementById('start')
+        this.btnPlay.addEventListener('click', this.startGame.bind(this));
+        this.btnHit = document.querySelector('.hit');
+        this.btnStay = document.querySelector('.stay');
         this.spanBudget = document.querySelector('.panel span.budget');
         this.inputBid = document.getElementById('bid');
         this.spanResult = document.querySelector('.score span.result');
@@ -136,7 +216,19 @@ class Game {
         this.spanLosses = document.querySelector('.score span.loss');
         this.divCroupierCards = document.querySelector('.croupierCards');
         this.divPlayerCards = document.querySelector('.playerCards');
+        this.playerHandValue = document.querySelector('.playerValue');
         this.render()
+        this.FlagEventListenerHit = 1;
+        this.FlagEventListenerStay = 1;
+
+    }
+    cleanTable() {
+        while (this.divCroupierCards.hasChildNodes()) {
+            this.divCroupierCards.removeChild(this.divCroupierCards.firstChild);
+        }
+        while (this.divPlayerCards.hasChildNodes()) {
+            this.divPlayerCards.removeChild(this.divPlayerCards.firstChild);
+        }
     }
 
     renderCroupierHandTable(hand) {
@@ -158,29 +250,67 @@ class Game {
 
 
     }
+
+
     render(money = this.budget.getBudgetAmount(), stats = [0, 0, 0], result = "") {
         this.spanBudget.textContent = money;
         this.spanGames.textContent = stats[0];
         this.spanWins.textContent = stats[1];
         this.spanLosses.textContent = stats[2];
-        this.spanResult.textContent = "";
+        this.spanResult.textContent = result;
     }
     startGame() {
+        this.btnHit.removeAttribute('disabled');
+        this.btnStay.removeAttribute('disabled');
+        this.btnPlay.disabled = true;
+        this.cleanTable();
         if (this.inputBid.value < 1) return alert(`The minimum amount you can play is 1$ `)
-        const bid = Math.floor(this.inputBid.value)
-        if (!this.budget.checkCanPlay(bid)) {
+        this.bid = Math.floor(this.inputBid.value)
+        if (!this.budget.checkCanPlay(this.bid)) {
             return alert("You dont have enough money")
         }
         this.deck = new Deck();
-        this.budget.changeBudgetAmount(bid, '-');
+        this.budget.changeBudgetAmount(this.bid, '-');
         this.deck.shuffle();
         this.hand = new Hand();
-        let playerHand = this.hand.getPlayersCards();
-        console.log(playerHand)
-        let croupierHand = this.hand.getCroupierCards();
+        this.playerHand = this.hand.getPlayersCards();
+        this.croupierHand = this.hand.getCroupierCards();
+        this.renderAfterStartGame(this.playerHand, this.croupierHand);
+        if (this.FlagEventListenerHit) {
+            this.btnHit.addEventListener('click', this.hitCard.bind(this))
+            this.FlagEventListenerHit = 0;
+        }
+        if (this.FlagEventListenerStay) {
+            this.btnStay.addEventListener('click', this.chooseToStay.bind(this))
+            this.FlagEventListenerStay = 0;
+        }
+
+    }
+    renderAfterStartGame(playerHand, croupierHand, money = this.budget.getBudgetAmount(), handValue = this.hand.checkHandValue(playerHand)) {
         this.renderCroupierHandTable(croupierHand);
         this.renderPlayerHandTable(playerHand);
+        this.spanBudget.textContent = money;
+        this.playerHandValue.textContent = `You have ${handValue}`;
     }
+    hitCard() {
+        this.cleanTable();
+        game.playerHand = this.hand.playersCardHit()
+        this.renderAfterStartGame(this.playerHand, this.croupierHand);
+        game.result.checkWinHit(this.hand.checkHandValue(this.playerHand))
+
+    }
+    chooseToStay() {
+        this.cleanTable();
+        game.croupierHand = this.hand.croupierGetRestCards();
+        while (game.hand.checkHandValue(game.croupierHand) < 17) {
+            game.croupierHand = game.hand.croupierGetRestCards()
+        }
+        this.renderAfterStartGame(this.playerHand, this.croupierHand);
+        game.result.checkWinStay(this.hand.checkHandValue(this.croupierHand), this.hand.checkHandValue(this.playerHand))
+
+
+    }
+
 }
 
 const game = new Game(1000);
