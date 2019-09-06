@@ -48,7 +48,45 @@ h1 {
 
 }
 
-.play button {
+.decision {
+    display: flex;
+    flex-direction: column;
+}
+
+.decision p {
+    text-align: center;
+    font-size: 25px;
+}
+
+.buttonArea {
+    display: flex;
+    justify-content: center;
+}
+
+.hit:disabled,
+.stay:disabled,
+button.play:disabled {
+    background-color: grey;
+    color: black
+}
+
+.hit {
+
+    background-color: green;
+}
+
+.stay {
+
+    background-color: red;
+}
+
+button.play {
+    background-color: green;
+}
+
+
+.play button,
+.decision button {
     margin: 5px;
     height: 50px;
     padding: 5px 15px;
