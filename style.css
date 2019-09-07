@@ -132,3 +132,33 @@ button.play {
 img {
     height: 80px;
 }
+
+@media (orientation: portrait) and (max-width : 768px) {
+    .wrap {
+        width: 95%;
+    }
+
+    .table {
+        width: 100%;
+    }
+
+    img {
+        height: 70px;
+    }
+
+    .play input {
+        width: 100px;
+    }
+
+    .croupierCards {
+        margin: 10px 10px 5px 10px;
+        display: flex;
+        justify-content: center;
+    }
+
+    .playerCards {
+        margin: 0px 10px 10px 10px;
+        display: flex;
+        justify-content: center;
+    }
+}
