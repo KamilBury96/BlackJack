@@ -260,15 +260,15 @@ class Game {
         this.spanResult.textContent = result;
     }
     startGame() {
-        this.btnHit.removeAttribute('disabled');
-        this.btnStay.removeAttribute('disabled');
-        this.btnPlay.disabled = true;
         this.cleanTable();
         if (this.inputBid.value < 1) return alert(`The minimum amount you can play is 1$ `)
         this.bid = Math.floor(this.inputBid.value)
         if (!this.budget.checkCanPlay(this.bid)) {
             return alert("You dont have enough money")
         }
+        this.btnHit.removeAttribute('disabled');
+        this.btnStay.removeAttribute('disabled');
+        this.btnPlay.disabled = true;
         this.deck = new Deck();
         this.budget.changeBudgetAmount(this.bid, '-');
         this.deck.shuffle();
